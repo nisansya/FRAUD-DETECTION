@@ -4,7 +4,7 @@ import numpy as np
 import joblib
 import plotly.express as px
 # from pathlib import Path
-from config import MODEL_PATH, SCALER_PATH
+from config import MODEL_PATH, SCALER_PATH, THRESHOLD_PATH
 from layout import load_css
 
 load_css()
@@ -27,11 +27,14 @@ def load_model():
     if SCALER_PATH.exists():
         scaler = joblib.load(SCALER_PATH)
 
-    return model, scaler
+    if THRESHOLD_PATH.exists():
+        threshold= joblib.load(THRESHOLD_PATH)
+
+    return model, scaler, threshold
 
 
 try:
-    model, scaler = load_model()
+    model, scaler, threshold = load_model()
 
 except Exception as error:
     st.error(f"Unable to load model: {error}")
@@ -177,7 +180,8 @@ def predict_transactions(df):
     else:
         X_processed = X
 
-    predictions = model.predict(X_processed)
+    y_prob= model.predict_proba(X_processed)[:, 1]
+    predictions = (y_prob > threshold).astype(int)
 
     results = df.copy()
 
@@ -187,15 +191,9 @@ def predict_transactions(df):
         "Normal"
     )
 
-    if hasattr(model, "predict_proba"):
-
-        probabilities = model.predict_proba(
-            X_processed
-        )[:, 1]
-
-        results["Fraud Probability (%)"] = (
-            probabilities * 100
-        ).round(2)
+    results["Fraud Probability (%)"] = (
+        y_prob * 100
+    ).round(2)
 
     return results
 
@@ -498,8 +496,6 @@ elif page == "Fraud Detection":
             st.error(
                 f"Unable to process the file: {error}"
             )
-    else:
-        st.error("unable to upload file")
 
 # =====================================================
 # 8. TRANSACTION ANALYSIS PAGE

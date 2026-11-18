@@ -1,302 +1,124 @@
-# Credit Card Fraud Detection (ML Project) – Step-by-Step Guide
+# 💳 Credit Card Fraud Detection
 
-Is document me project ko **chhote se chhote steps** me likha gaya hai. Bas upar se neeche ek-ek step follow karo.
+An end-to-end Machine Learning project that detects fraudulent credit card transactions in real-time using a Streamlit web app.
 
-**Goal:** Ek Machine Learning model banana jo bataye ki koi credit card transaction **Fraud (1)** hai ya **Normal (0)**.
+Built with Python, Scikit-Learn, XGBoost, and deployed with **Docker & Streamlit**.
+
+**Trained on 284,807 real-world transactions.**
 
 ---
 
-## Phase 0 – Setup (Computer taiyar karo)
+## 🚀 Live Demo
 
-1. Python install karo (version 3.9 ya usse naya) – https://www.python.org/downloads/
-2. Install karte waqt **"Add Python to PATH"** wala box tick karo.
-3. Terminal / Command Prompt kholo aur check karo:
-   ```bash
-   python --version
-   ```
-4. Git install karo – https://git-scm.com/downloads
-5. Check karo:
-   ```bash
-   git --version
-   ```
-6. VS Code install karo (code likhne ke liye) – https://code.visualstudio.com/
-7. VS Code me **Python** aur **Jupyter** extension install karo.
+**Try the App:** [Click here to open the Live App]([https://your-streamlit-link-here.streamlit.app](https://fraud-detection-vjmbevyratpgvf3tdvmndc.streamlit.app/))
 
-## Phase 1 – Repo ko apne computer par laao
+**Docker Hub:** [nisansya/fraud-app:1.0]([https://hub.docker.com/r/nisansya/fraud-app](https://hub.docker.com/repository/docker/nisansya/fraud-app/general))
 
-8. Terminal me wo folder kholo jaha project rakhna hai.
-9. Repo clone karo:
-   ```bash
-   git clone https://github.com/RIAURAI/nisansya-ml-Credit-Card-Fraud-Detection.git
-   ```
-10. Folder ke andar jao:
-    ```bash
-    cd nisansya-ml-Credit-Card-Fraud-Detection
+---
+
+## ✨ Features
+
+- **Real-time Prediction:** Upload a CSV file and get fraud predictions instantly
+- **Single Transaction Check:** Manually enter transaction details to check if it's fraud
+- **Transaction Analysis:** Visualize fraud vs normal transactions with interactive charts
+- **Batch Processing:** Predict on thousands of transactions at once
+- **Download Results:** Export predictions as a CSV file
+- **High Accuracy:** Handles highly imbalanced data using SMOTE
+
+---
+
+## 🛠️ Tech Stack
+
+- **Language:** Python 3.13
+- **Web App:** Streamlit
+- **ML Libraries:** Scikit-Learn, XGBoost, Imbalanced-Learn (SMOTE)
+- **Data:** Pandas, NumPy, Plotly
+- **Deployment:** Docker, Docker Hub, Streamlit Cloud
+- **Models Used:** Random Forest, XGBoost
+
+---
+
+## 📁 Project Structure
     ```
-11. Ye folders banao:
-    ```bash
-    mkdir data notebooks src models
-    ```
+    nisansya-ml-Credit-Card-Fraud-Detection/
     - `data/` → dataset
     - `notebooks/` → Jupyter notebooks
     - `src/` → Python scripts
     - `models/` → trained model files
+    - `requirements.txt` # App dependencies
+    -`Dockerfile` # Docker setup
+    -`.dockerignore ` # Files to ignore in
 
-## Phase 2 – Virtual Environment banao
-
-12. Virtual environment banao:
-    ```bash
-    python -m venv venv
-    ```
-13. Use activate karo:
-    - Windows: `venv\Scripts\activate`
-    - Mac/Linux: `source venv/bin/activate`
-14. Terminal me `(venv)` dikhna chahiye – matlab sahi hai.
-15. `requirements.txt` naam ki file banao aur isme ye likho:
-    ```
-    pandas
-    numpy
-    matplotlib
-    seaborn
-    scikit-learn
-    imbalanced-learn
-    xgboost
-    joblib
-    jupyter
-    streamlit
-    ```
-16. Sab libraries install karo:
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-## Phase 3 – Dataset download karo
-
-17. Kaggle par account banao – https://www.kaggle.com/
-18. Dataset kholo: https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud
-19. **Download** button dabao (zip file aayegi).
-20. Zip ko extract karo → `creditcard.csv` milegi.
-21. `creditcard.csv` ko `data/` folder me rakho.
-22. `.gitignore` file banao aur isme likho (badi file GitHub par nahi jaani chahiye):
-    ```
-    venv/
-    data/*.csv
-    __pycache__/
-    .ipynb_checkpoints/
-    ```
-
-> **Dataset ke baare me:** 2,84,807 transactions hain, jisme sirf 492 fraud hain (~0.17%). Columns: `Time`, `V1`–`V28` (hidden/PCA features), `Amount`, aur `Class` (0 = Normal, 1 = Fraud).
-
-## Phase 4 – Notebook shuru karo
-
-23. Terminal me likho:
-    ```bash
-    jupyter notebook
-    ```
-24. Browser khulega → `notebooks/` folder me jao.
-25. **New → Python 3** se naya notebook banao, naam rakho `fraud_detection.ipynb`.
-
-## Phase 5 – Data load karo
-
-26. Pehle cell me libraries import karo:
-    ```python
-    import pandas as pd
-    import numpy as np
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-    ```
-27. Data load karo:
-    ```python
-    df = pd.read_csv('../data/creditcard.csv')
-    ```
-28. Pehli 5 rows dekho: `df.head()`
-29. Rows aur columns ki ginti dekho: `df.shape`
-30. Column info dekho: `df.info()`
-
-## Phase 6 – Data samjho (EDA)
-
-31. Missing values check karo: `df.isnull().sum()` (sab 0 hone chahiye).
-32. Duplicate rows check karo: `df.duplicated().sum()`
-33. Duplicates hatao: `df = df.drop_duplicates()`
-34. Fraud vs Normal count dekho: `df['Class'].value_counts()`
-35. Iska bar chart banao:
-    ```python
-    sns.countplot(x='Class', data=df)
-    plt.show()
-    ```
-36. Note karo: data **bahut imbalanced** hai (fraud bahut kam hai). Ye baad me handle karna hai.
-37. `Amount` ka distribution dekho:
-    ```python
-    sns.histplot(df['Amount'], bins=50)
-    plt.show()
-    ```
-38. Fraud aur Normal ka average amount compare karo:
-    ```python
-    df.groupby('Class')['Amount'].mean()
-    ```
-39. Correlation heatmap banao:
-    ```python
-    plt.figure(figsize=(12,10))
-    sns.heatmap(df.corr(), cmap='coolwarm')
-    plt.show()
-    ```
-
-## Phase 7 – Data taiyar karo (Preprocessing)
-
-40. `Amount` aur `Time` ko scale karo (baaki V1–V28 pehle se scaled hain):
-    ```python
-    from sklearn.preprocessing import StandardScaler
-    scaler = StandardScaler()
-    df[['Amount', 'Time']] = scaler.fit_transform(df[['Amount', 'Time']])
-    ```
-41. Features (X) aur target (y) alag karo:
-    ```python
-    X = df.drop('Class', axis=1)
-    y = df['Class']
-    ```
-42. Train aur Test data me baanto (80% / 20%):
-    ```python
-    from sklearn.model_selection import train_test_split
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42, stratify=y)
-    ```
-    > `stratify=y` zaroori hai taaki dono me fraud ka ratio same rahe.
-
-## Phase 8 – Imbalance handle karo
-
-43. SMOTE import karo:
-    ```python
-    from imblearn.over_sampling import SMOTE
-    ```
-44. **Sirf training data** par SMOTE lagao (test data ko kabhi mat chhuo):
-    ```python
-    sm = SMOTE(random_state=42)
-    X_train_res, y_train_res = sm.fit_resample(X_train, y_train)
-    ```
-45. Check karo ab dono class barabar hain: `y_train_res.value_counts()`
-
-## Phase 9 – Model banao
-
-46. **Model 1 – Logistic Regression** (simple baseline):
-    ```python
-    from sklearn.linear_model import LogisticRegression
-    lr = LogisticRegression(max_iter=1000)
-    lr.fit(X_train_res, y_train_res)
-    ```
-47. **Model 2 – Random Forest:**
-    ```python
-    from sklearn.ensemble import RandomForestClassifier
-    rf = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
-    rf.fit(X_train_res, y_train_res)
-    ```
-48. **Model 3 – XGBoost:**
-    ```python
-    from xgboost import XGBClassifier
-    xgb = XGBClassifier(random_state=42, eval_metric='logloss')
-    xgb.fit(X_train_res, y_train_res)
-    ```
-
-## Phase 10 – Model check karo (Evaluation)
-
-49. Evaluation tools import karo:
-    ```python
-    from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, average_precision_score
-    ```
-50. Har model ke liye ye chalao (example Random Forest ka):
-    ```python
-    y_pred = rf.predict(X_test)
-    y_prob = rf.predict_proba(X_test)[:, 1]
-    print(classification_report(y_test, y_pred))
-    print(confusion_matrix(y_test, y_pred))
-    print('ROC-AUC:', roc_auc_score(y_test, y_prob))
-    print('PR-AUC:', average_precision_score(y_test, y_prob))
-    ```
-51. **Accuracy par bharosa mat karo** – sab ko "Normal" bolke bhi 99.8% accuracy aa jaati hai.
-52. In cheezon ko dekho:
-    - **Recall (Fraud)** → kitne fraud pakde (jitna zyada utna achha)
-    - **Precision (Fraud)** → jo fraud bola, usme kitne sach me fraud the
-    - **F1-score** aur **PR-AUC**
-53. Teeno models ke results ek table me likho aur compare karo.
-54. Sabse achha model choose karo (usually XGBoost ya Random Forest).
-
-## Phase 11 – Model ko behtar karo (Optional)
-
-55. Threshold badal ke dekho (0.5 ki jagah 0.3, 0.4 etc.):
-    ```python
-    y_pred_new = (y_prob > 0.3).astype(int)
-    ```
-56. `GridSearchCV` ya `RandomizedSearchCV` se best parameters dhoondo.
-57. Feature importance dekho:
-    ```python
-    pd.Series(rf.feature_importances_, index=X.columns).sort_values(ascending=False).head(10)
-    ```
-
-## Phase 12 – Model save karo
-
-58. Best model aur scaler save karo:
-    ```python
-    import joblib
-    joblib.dump(rf, '../models/fraud_model.pkl')
-    joblib.dump(scaler, '../models/scaler.pkl')
-    ```
-59. Check karo ki `models/` folder me dono files aa gayi.
-
-## Phase 13 – Simple App banao (Optional)
-
-60. `src/app.py` file banao.
-61. Isme Streamlit use karke model load karo aur user se CSV upload karwao.
-62. Upload hui transactions par prediction dikhao (Fraud / Normal).
-63. App chalao:
-    ```bash
-    streamlit run src/app.py
-    ```
-
-## Phase 14 – GitHub par code daalo
-
-64. Status dekho: `git status`
-65. Sab files add karo: `git add .`
-66. Commit karo: `git commit -m "Added fraud detection notebook and model"`
-67. Push karo: `git push origin main`
-68. GitHub par repo kholke check karo ki files aa gayi.
-
-## Phase 15 – Final kaam
-
-69. Is README me **Results** section add karo (best model ka Recall, Precision, F1, ROC-AUC).
-70. Confusion matrix aur charts ke screenshots add karo.
-71. **"How to run"** section likho (Phase 2, 3, 4 ke commands).
-72. Final commit aur push karo. ✅ Project complete!
 
 ---
 
-## Final Folder Structure
+## 📊 Dataset
 
+- **Source:** [Kaggle - Credit Card Fraud Detection](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud)
+- **Total Transactions:** 284,807
+- **Fraud Transactions:** 492 (0.172% - Highly Imbalanced)
+- **Features:** `Time`, `Amount`, `V1` to `V28` (PCA transformed), `Class` (0 = Normal, 1 = Fraud)
+
+---
+
+## 📈 Model Performance
+
+| Model | Precision | Recall | F1-Score | ROC-AUC |
+| :--- | :---: | :---: | :---: | :---: |
+| Random Forest | 0.89 | 0.77 | 0.82 | 0.96 |
+| **XGBoost (Best)** | **0.83** | **0.80** | **0.81** | **0.95** |
+
+---
+
+## ⚙️ How to Run Locally
+
+### 1. Clone the Repo
+```bash
+git clone https://github.com/nisansya/FRAUD-DETECTION.git
+cd FRAUD-DETECTION
 ```
-nisansya-ml-Credit-Card-Fraud-Detection/
-├── data/                  # creditcard.csv (GitHub par upload nahi hoga)
-├── notebooks/
-│   └── fraud_detection.ipynb
-├── src/
-│   └── app.py
-├── models/
-│   ├── fraud_model.pkl
-│   └── scaler.pkl
-├── requirements.txt
-├── .gitignore
-└── README.md
+
+### 2. Create Virtual Environment
+```bash
+# Windows
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+
+# Mac / Linux
+python3 -m venv venv
+source venv/bin/activate
 ```
 
-## Quick Checklist
+### 3. Install Dependencies
+```bash
+pip install -r requirements.txt4.
+```
 
-- [ ] Setup done (Python, Git, VS Code)
-- [ ] Repo clone + folders bane
-- [ ] venv + libraries install
-- [ ] Dataset download
-- [ ] EDA done
-- [ ] Preprocessing + Train/Test split
-- [ ] SMOTE applied
-- [ ] 3 models trained
-- [ ] Evaluation + comparison
-- [ ] Model saved
-- [ ] App (optional)
-- [ ] Code pushed to GitHub
-- [ ] README me results add
+### 4. Run the App
+```bash
+streamlit run app.py
+```
+
+### 🐳 Run with Docker (Recommended)
+You don't need Python or any setup. Just Docker.
+Option 1: Pull from Docker Hub
+```bash
+docker pull nisansya/fraud-app:1.0
+docker run -p 8501:8501 nisansya/fraud-app:1.0
+```
+
+Option 2: Build Locally
+```bash
+docker build -t fraud-app:1.0 .
+docker run -p 8501:8501 fraud-app:1.0
+```
+Now open http://localhost:8501 in your browser.
+
+## How It Works
+### 1. Data Cleaning: Checked for missing values & duplicates.
+### 2. EDA: Found data is highly imbalanced (only 0.17% fraud).
+### 3. Preprocessing: Scaled Amount and Time using StandardScaler.
+### 4. Handling Imbalance: Used SMOTE to balance fraud and normal classes in training data.
+### 5. Training: Trained Random Forest, and XGBoost.
+### 6. Evaluation: Compared models using Precision, Recall, and ROC-AUC (Accuracy alone is misleading here).
+### 7. Deployment: Saved best model as .pkl and deployed with Streamlit + Docker.    

@@ -10,9 +10,9 @@ Built with Python, Scikit-Learn, XGBoost, and deployed with **Docker & Streamlit
 
 ## 🚀 Live Demo
 
-**Try the App:** [Click here to open the Live App](https://your-streamlit-link-here.streamlit.app](https://fraud-detection-vjmbevyratpgvf3tdvmndc.streamlit.app/)
+**Try the App:** [Click here to open the Live App](https://fraud-detection-vjmbevyratpgvf3tdvmndc.streamlit.app/)
 
-**Docker Hub:** [nisansya/fraud-app:1.0](https://hub.docker.com/r/nisansya/fraud-app](https://hub.docker.com/repository/docker/nisansya/fraud-app/general)
+**Docker Hub:** [nisansya/fraud-app:1.0](https://hub.docker.com/repository/docker/nisansya/fraud-app/general)
 
 ---
 
